@@ -4,9 +4,7 @@ cmake_minimum_required (VERSION 2.6)
 set (TargetName detail_transfer)
 project (${TargetName})
 add_executable(${TargetName} 
-	detail_displace.cpp 
-	tinyply.cpp 
-	tinyply.h)
+	detail_displace.cpp )
 target_compile_features(${TargetName} PRIVATE cxx_std_17)
 target_include_directories(${TargetName} PRIVATE ${OPENMESH_INCLUDE_DIRS})
 target_link_libraries(${TargetName} PRIVATE ${OPENMESH_LIBRARIES} stdc++fs Threads::Threads)
