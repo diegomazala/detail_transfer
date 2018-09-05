@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
 
 	t.stop();
-	t.print_interval_msec("Load meshes time: ");
+	t.print_interval("Loading meshes  : ");
 
 	if (detail_mesh.n_vertices() != target_base_mesh.n_vertices() || detail_base_mesh.n_vertices() != target_base_mesh.n_vertices())
 	{
@@ -94,19 +94,28 @@ int main(int argc, char* argv[])
 	Smooth::MyMesh::VertexIter v_it_db(detail_base_mesh.vertices_begin()), v_end_db(detail_base_mesh.vertices_end());
 	Smooth::MyMesh::VertexIter v_it_tb(target_base_mesh.vertices_begin()), v_end_tb(target_base_mesh.vertices_end());
 
+	t.start();
 	for (; v_it_tb != v_end_tb; ++v_it_d, ++v_it_db, ++v_it_tb) 
 	{
 		const auto vec3 = detail_mesh.point(*v_it_d) - detail_base_mesh.point(*v_it_db) + target_base_mesh.point(*v_it_tb);
 		detail_mesh.set_point(*v_it_d, vec3);
 	}
+	t.stop();
+	t.print_interval("Computing detail: ");
+	
+
 
 	
 	std::cout << "Saving : " << output_mesh_filename << '\n';
+	t.start();
 	if (!OpenMesh::IO::write_mesh(detail_mesh, output_mesh_filename))
 	{
 		std::cerr << "Error: cannot write mesh to " << output_mesh_filename << std::endl;
 		return false;
 	}
+	t.stop();
+	t.print_interval("Saving mesh file: ");
+	
 
 	return EXIT_SUCCESS;
 }
