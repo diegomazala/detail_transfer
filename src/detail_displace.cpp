@@ -7,9 +7,9 @@
 #include <algorithm>
 #include <vector>
 #include <thread>
-#include <future>
 #include <exception>
 #include "cmdline.h"
+#include "timer.h"
 
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -53,29 +53,23 @@ int main(int argc, char* argv[])
 	Smooth::MyMesh detail_base_mesh;
 	Smooth::MyMesh target_base_mesh;
 
-	//std::vector<std::thread> thread;
-	std::vector<std::future<bool>> async;
+	timer t;
+	t.start();
+
+	std::vector<std::thread> thread;
 	try
 	{
 		std::cout << "Loading: " << detail_mesh_filename << '\n';
-		//OpenMesh::IO::read_mesh(detail_mesh, detail_mesh_filename);
-		//thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_mesh, detail_mesh_filename); }));
-		async.push_back(std::async([&]() -> bool { return OpenMesh::IO::read_mesh(detail_mesh, detail_mesh_filename); }));
+		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_mesh, detail_mesh_filename); }));
 
 		//std::cout << "Loading: " << target_mesh_filename << '\n';
-		//OpenMesh::IO::read_mesh(target_mesh, target_mesh_filename);
-		//thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(target_mesh, target_mesh_filename); }));
-		//async.push_back(std::async([&]() -> bool { return OpenMesh::IO::read_mesh(target_mesh, target_mesh_filename); }));
+		//thread.push_back(std::thread([&]() { OpenMesh::IO::read_mesh(target_mesh, target_mesh_filename); }));
 
 		std::cout << "Loading: " << detail_base_mesh_filename << '\n';
-		//OpenMesh::IO::read_mesh(detail_base_mesh, detail_base_mesh_filename);
-		//thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_base_mesh, detail_base_mesh_filename); }));
-		async.push_back(std::async([&]() -> bool { return OpenMesh::IO::read_mesh(detail_base_mesh, detail_base_mesh_filename); }));
+		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_base_mesh, detail_base_mesh_filename); }));
 
 		std::cout << "Loading: " << target_base_mesh_filename << '\n';
-		//OpenMesh::IO::read_mesh(target_base_mesh, target_base_mesh_filename);
-		//thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(target_base_mesh, target_base_mesh_filename); }));
-		async.push_back(std::async([&]() -> bool { return OpenMesh::IO::read_mesh(target_base_mesh, target_base_mesh_filename); }));
+		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(target_base_mesh, target_base_mesh_filename); }));
 	}
 	catch(const std::exception& ex)
 	{
@@ -83,12 +77,12 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	// for (auto& t : thread) 
-	// 	t.join();
+	for (auto& t : thread) 
+	 	t.join();
 
-	for (auto& a : async) 
-		a.wait();
 
+	t.stop();
+	t.print_interval_msec("Load meshes time: ");
 
 	if (detail_mesh.n_vertices() != target_base_mesh.n_vertices() || detail_base_mesh.n_vertices() != target_base_mesh.n_vertices())
 	{

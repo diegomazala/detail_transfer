@@ -13,7 +13,8 @@ set (TargetName smooth)
 project (${TargetName})
 add_executable(${TargetName} 
 	smooth.cpp 
-	smooth.h)
+	smooth.h
+	timer.h)
 add_definitions(-D_USE_MATH_DEFINES)
 target_compile_features(${TargetName} PRIVATE cxx_std_11)
 target_include_directories(${TargetName} PRIVATE ${OPENMESH_INCLUDE_DIRS})
