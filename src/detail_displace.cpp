@@ -19,7 +19,6 @@ namespace fs = std::experimental::filesystem;
 cmdline::parser cmd_parser;
 void cmd_parser_build()
 {
-	cmd_parser.add<std::uint32_t>("f",  0, "Number of filter iterations", false);
 	cmd_parser.add<std::string>("d",  0, "Detail mesh file", true);
 	cmd_parser.add<std::string>("t",  0, "Target mesh file", false);
 	cmd_parser.add<std::string>("df", 0, "Filtered detail mesh file", true);
@@ -45,7 +44,6 @@ int main(int argc, char* argv[])
 	const std::string& target_mesh_filename 		= cmd_parser.get<std::string>("t");
 	const std::string& target_base_mesh_filename 	= cmd_parser.get<std::string>("tf");
 	const std::string& output_mesh_filename 		= cmd_parser.get<std::string>("o");
-	const uint32_t number_of_filter_iterations		= cmd_parser.get<uint32_t>("f");
 
 
 	Smooth::MyMesh detail_mesh;	
@@ -60,16 +58,20 @@ int main(int argc, char* argv[])
 	try
 	{
 		std::cout << "Loading: " << detail_mesh_filename << '\n';
-		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_mesh, detail_mesh_filename); }));
+        OpenMesh::IO::Options OptionRead(OpenMesh::IO::Options::VertexTexCoord);
+        detail_mesh.request_vertex_texcoords2D();
+		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_mesh, detail_mesh_filename, OptionRead); }));
 
 		//std::cout << "Loading: " << target_mesh_filename << '\n';
-		//thread.push_back(std::thread([&]() { OpenMesh::IO::read_mesh(target_mesh, target_mesh_filename); }));
+		//thread.push_back(std::thread([&]() { OpenMesh::IO::read_mesh(target_mesh, target_mesh_filename, OptionRead); }));
 
 		std::cout << "Loading: " << detail_base_mesh_filename << '\n';
-		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_base_mesh, detail_base_mesh_filename); }));
+        detail_base_mesh.request_vertex_texcoords2D();
+		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(detail_base_mesh, detail_base_mesh_filename, OptionRead); }));
 
 		std::cout << "Loading: " << target_base_mesh_filename << '\n';
-		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(target_base_mesh, target_base_mesh_filename); }));
+        target_base_mesh.request_vertex_texcoords2D();
+		thread.push_back(std::thread([&] { OpenMesh::IO::read_mesh(target_base_mesh, target_base_mesh_filename, OptionRead); }));
 	}
 	catch(const std::exception& ex)
 	{
@@ -108,7 +110,8 @@ int main(int argc, char* argv[])
 	
 	std::cout << "Saving : " << output_mesh_filename << '\n';
 	t.start();
-	if (!OpenMesh::IO::write_mesh(detail_mesh, output_mesh_filename))
+    OpenMesh::IO::Options OptionWrite(OpenMesh::IO::Options::VertexTexCoord);
+	if (!OpenMesh::IO::write_mesh(detail_mesh, output_mesh_filename, OptionWrite))
 	{
 		std::cerr << "Error: cannot write mesh to " << output_mesh_filename << std::endl;
 		return false;
